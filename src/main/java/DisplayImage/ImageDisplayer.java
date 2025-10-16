@@ -7,22 +7,12 @@ import javax.swing.*;
 import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.util.HashMap;
-import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class ImageDisplayer {
 
 
-    private static String TITLE = "Bitmap Image Viewer!";
-
     //The factor to scale down the window from the size of the screen
     private static final double WINDOW_SIZE_FACTOR = 0.7;
-
-    private static final int MIN_ZOOM = 10;
-    private static final int MAX_ZOOM = 1600;
 
     private static final int[] ZOOM_LEVELS = {100, 200, 300, 400, 600, 800, 1000, 1200, 1600, 2000, 2800, 4000};
 
@@ -34,9 +24,8 @@ public class ImageDisplayer {
 
     private JFrame frame;
     private JPanel pixelGrid;
-    private JLabel uiLabel;
 
-    private String path;
+    private final String path;
 
     public ImageDisplayer(BitmapImage img, String path) {
         this.img = img;
@@ -46,28 +35,26 @@ public class ImageDisplayer {
 
     public void run() {
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    initDisplay(); //Initialize the display
-                    populate(); //Add pixels to the display
-                    keyBinding();
-                    frame.pack();
-                    frame.setVisible(true);
+        SwingUtilities.invokeLater(() -> {
+            try {
+                initDisplay(); //Initialize the display
+                populate(); //Add pixels to the display
+                keyBinding();
+                frame.pack();
+                frame.setVisible(true);
 
 //                    //Update UI every TIME_WAIT_MS milliseconds
 //                    new Timer(TIME_WAIT_MS, e -> {
 //                        updateDisplay();
 //                    }).start();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         });
     }
 
     public void initDisplay() throws InterruptedException {
+        String TITLE = "Bitmap Image Viewer!";
         frame = new JFrame(TITLE);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -77,16 +64,16 @@ public class ImageDisplayer {
         int xPixels = this.img.getWidth();
         int yPixels = this.img.getHeight();
 
-        frame.setSize(windowBounds.width, (int) (windowBounds.height));
+        frame.setSize(windowBounds.width, (windowBounds.height));
 
         JPanel verticalPanel = new JPanel();
         verticalPanel.setLayout(new BoxLayout(verticalPanel, BoxLayout.Y_AXIS));
-        verticalPanel.setPreferredSize(new Dimension(windowBounds.width, (int) (windowBounds.height)));
+        verticalPanel.setPreferredSize(new Dimension(windowBounds.width, (windowBounds.height)));
         verticalPanel.setBorder(new LineBorder(Color.BLACK, 2));
 
 
-        this.uiLabel = new JLabel(this.path);
-        this.uiLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JLabel uiLabel = new JLabel(this.path);
+        uiLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
 
         //this.pixelGrid  = new JPanel(new GridBagLayout());
@@ -143,13 +130,6 @@ public class ImageDisplayer {
     public void populate() {
         int pixelSize = Math.min(frame.getSize().width/this.img.getWidth(), frame.getSize().height/this.img.getHeight());
 
-        Random r = new Random();
-
-        //GridBagConstraints gbc = new GridBagConstraints();
-        //gbc.fill = GridBagConstraints.BOTH; // Allow components to fill their display area
-        //gbc.weightx = 1.0; // Distribute extra horizontal space
-        //gbc.weighty = 1.0; // Distribute extra vertical space
-
         for(BmpColor bmpColor : img) {
             pixelGrid.add(new PixelComponent(pixelSize,bmpColor));
         }
@@ -173,7 +153,7 @@ public class ImageDisplayer {
         zoomIndex++;
         pixelGrid.setPreferredSize(new Dimension(
                 (int) (img.getWidth()*((double)ZOOM_LEVELS[zoomIndex]/100)),
-                (int) (img.getWidth()*((double)ZOOM_LEVELS[zoomIndex]/100)))
+                (int) (img.getHeight()*((double)ZOOM_LEVELS[zoomIndex]/100)))
         );
         pixelGrid.revalidate();
         pixelGrid.repaint();
@@ -187,7 +167,7 @@ public class ImageDisplayer {
         zoomIndex--;
         pixelGrid.setPreferredSize(new Dimension(
                 (int) (img.getWidth()*((double)ZOOM_LEVELS[zoomIndex]/100)),
-                (int) (img.getWidth()*((double)ZOOM_LEVELS[zoomIndex]/100)))
+                (int) (img.getHeight()*((double)ZOOM_LEVELS[zoomIndex]/100)))
         );
         pixelGrid.repaint();
         pixelGrid.revalidate();

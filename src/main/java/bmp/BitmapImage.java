@@ -1,25 +1,18 @@
 package bmp;
 
-import java.util.BitSet;
 import java.util.Iterator;
 
-import static Utilities.DataInterpretation.bitSetToInt;
-
+//TODO: Figure out why 24bit colors are wrong in test5
 public class BitmapImage implements Iterable<BmpColor> {
     private static final int HEADER_NUM_BYTES = 14;
     private static final int INFO_HEADER_NUM_BYTES = 40;
 
-    private int colorTableNumBytes;
-    private int imageDataNumBytes;
+    private static final int BYTE_BITS = 8;
 
     protected Header header;
     protected InfoHeader infoHeader;
     protected ColorTable colorTable;
     protected ImageData img;
-
-    private int pixelIndex = 0;
-
-    private final int numPixels;
 
     public BitmapImage(byte[] rawData) {
         //must construct header and infoHeader first as numColors and imageSize members of infoHeader are necessary to
@@ -40,22 +33,20 @@ public class BitmapImage implements Iterable<BmpColor> {
             this.colorTable = null; //if bits per pixel > 8, then there is no color table. Colors are stored in the bitmap
         } else {
             //get the number of colors in the color table
-            this.colorTableNumBytes = infoHeader.getNumColors()*4;
+            int colorTableNumBytes = infoHeader.getNumColors() * 4;
             byte[] colorTableData = new byte[colorTableNumBytes];
-            System.arraycopy(rawData, rawDataPos, colorTableData,0,colorTableNumBytes);
+            System.arraycopy(rawData, rawDataPos, colorTableData,0, colorTableNumBytes);
             this.colorTable = new ColorTable(colorTableData);
+            rawDataPos+= colorTableNumBytes;
         }
-        rawDataPos+=colorTableNumBytes;
 
-        this.imageDataNumBytes = getWidth()*getHeight();
+        int imageDataNumBytes = (int) (getWidth() * getHeight() * ((double) infoHeader.bitsPerPixel.getBits() / BYTE_BITS));
         byte[] imageData = new byte[imageDataNumBytes];
-        System.arraycopy(rawData, rawDataPos, imageData,0,imageDataNumBytes);
+        System.arraycopy(rawData, rawDataPos, imageData,0, imageDataNumBytes);
 
-        this.numPixels = infoHeader.getHeight()*infoHeader.getWidth();
-
-        int padding = this.numPixels%4;
-        padding = (padding==0) ? (0) : (4-padding);
-        this.img = new ImageData(imageData, infoHeader.getHeight(), infoHeader.getWidth(), padding);
+        //int padding = this.numPixels%4;
+        //padding = (padding==0) ? (0) : (4-padding);
+        this.img = new ImageData(imageData, infoHeader.getHeight(), (int) (getWidth()*((double)infoHeader.bitsPerPixel.getBits()/BYTE_BITS)));//, padding);
 
         //rawDataPos+=imageDataNumBytes;
     }
@@ -68,27 +59,6 @@ public class BitmapImage implements Iterable<BmpColor> {
         return infoHeader.getHeight();
     }
 
-//    public BmpColor getNextPixel() {
-//        BmpColor nextPixelColor;
-//
-//
-//        return nextPixelColor;
-//    }
-
-//    //Advance pixelIndex to the next pixel. Returns true if there is a next pixel
-//    public boolean nextPosition() {
-//        if(pixelIndex >= this.numPixels) {
-//            pixelIndex = imageBits.length();
-//            return false;
-//        }
-//        pixelIndex++;
-//        return true;
-//
-//    }
-//
-//    public void firstPosition() {
-//        pixelIndex = 0;
-//    }
     public BmpColor get(int col, int row) {
         //Different approach to getting the color depending on the bit depth
         //If color table is null, colors are directly in the imageData.
@@ -125,14 +95,13 @@ public class BitmapImage implements Iterable<BmpColor> {
     }
 
     public BmpColor getDirectColor(int col, int row, int depth) {
-        int colorOffset = depth/3;
         int[] colorsBGR = this.img.getValue(col, row, depth);
         return new BmpColor(colorsBGR[2], colorsBGR[1], colorsBGR[0]);
     }
 
     @Override
     public Iterator<BmpColor> iterator() {
-        return new Iterator<BmpColor>() {
+        return new Iterator<>() {
             private int row = getHeight()-1;
             private int col = 0;
 
