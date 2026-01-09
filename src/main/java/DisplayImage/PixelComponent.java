@@ -1,7 +1,6 @@
 package DisplayImage;
 
 import bmp.BmpColor;
-import bmp.BmpTest;
 
 import javax.swing.*;
 import java.awt.*;
