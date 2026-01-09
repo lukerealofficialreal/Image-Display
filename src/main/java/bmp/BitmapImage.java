@@ -2,7 +2,7 @@ package bmp;
 
 import java.util.Iterator;
 
-//TODO: Figure out why 24bit colors are wrong in test5
+//TODO: Test 2 bit, 4 bit, 16 bit images
 public class BitmapImage implements Iterable<BmpColor> {
     private static final int HEADER_NUM_BYTES = 14;
     private static final int INFO_HEADER_NUM_BYTES = 40;
@@ -40,13 +40,16 @@ public class BitmapImage implements Iterable<BmpColor> {
             rawDataPos+= colorTableNumBytes;
         }
 
-        int imageDataNumBytes = (int) (getWidth() * getHeight() * ((double) infoHeader.bitsPerPixel.getBits() / BYTE_BITS));
+        //As soon as it becomes possible to generate lots of test images, test this padding code thoroughly
+        int padding = (getWidth()*(infoHeader.bitsPerPixel.getBits()/8))%4;
+        padding = (padding==0) ? (0) : (4-padding);
+
+        int imageDataNumBytesNoPadding = (int) ((getWidth()) * getHeight() * ((double) infoHeader.bitsPerPixel.getBits() / BYTE_BITS));
+        int imageDataNumBytes = (int) ((getWidth()) * getHeight() * ((double) infoHeader.bitsPerPixel.getBits() / BYTE_BITS)) + (padding*getHeight());
         byte[] imageData = new byte[imageDataNumBytes];
         System.arraycopy(rawData, rawDataPos, imageData,0, imageDataNumBytes);
 
-        //int padding = this.numPixels%4;
-        //padding = (padding==0) ? (0) : (4-padding);
-        this.img = new ImageData(imageData, infoHeader.getHeight(), (int) (getWidth()*((double)infoHeader.bitsPerPixel.getBits()/BYTE_BITS)));//, padding);
+        this.img = new ImageData(imageData, infoHeader.getHeight(), (int) (getWidth()*((double)infoHeader.bitsPerPixel.getBits()/BYTE_BITS)), padding);
 
         //rawDataPos+=imageDataNumBytes;
     }

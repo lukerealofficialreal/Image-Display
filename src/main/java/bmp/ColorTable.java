@@ -13,7 +13,6 @@ public class ColorTable extends DataInterpretation {
         return colors.length/4;
     }
 
-    //TODO: Palette is completely wrong. The indexes seem maybe correct.
     public BmpColor getColor(int index) {
         int realIndex = index*4;
         BmpColor color = new BmpColor((int)colors[realIndex+2]<0 ? (int)colors[realIndex+2]+256 : (int)colors[realIndex+2],

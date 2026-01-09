@@ -8,11 +8,10 @@ public class ImageData {
     //Rows are stored upside down, such that rawData[0][0] would be the bottom left of the image
     private final byte[][] rawData;
 
-    //TODO: figure out why there is no padding bytes despite it being mentioned in the documentation
-    public ImageData(byte[] rawData, int numLines, int lineLenNoPad){//, int linePaddingBytes) {
+    public ImageData(byte[] rawData, int numLines, int lineLenNoPad, int linePaddingBytes) {
         this.rawData = new byte[numLines][lineLenNoPad];
         for(int i = 0; i<numLines; i++) {
-            System.arraycopy(rawData,(i*(lineLenNoPad/*+linePaddingBytes*/)),this.rawData[i],0,lineLenNoPad);
+            System.arraycopy(rawData,(i*(lineLenNoPad+linePaddingBytes)),this.rawData[i],0,lineLenNoPad);
         }
     }
 
@@ -25,7 +24,7 @@ public class ImageData {
             int startingByte = pixelNum*(bitsPerPixel/BYTE_BITS);
             //int numBytes = bitsPerPixel/BYTE_BITS;
             int bitsPerColor = bitsPerPixel/3;
-            //int startingBit =  bitsPerPixel%3;
+            //int startingBit = bitsPerPixel%3;
             int startingBit = 0;
             return new int[] {DataInterpretation.bitsFromBytesToInt(this.rawData[row],startingByte,startingBit,bitsPerColor),
                     DataInterpretation.bitsFromBytesToInt(this.rawData[row],startingByte+(bitsPerColor/8),startingBit + (bitsPerColor%8),bitsPerColor),
