@@ -9,8 +9,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 
 public class ImageDisplayer {
-
-
     //The factor to scale down the window from the size of the screen
     private static final double WINDOW_SIZE_FACTOR = 0.7;
 
@@ -18,18 +16,16 @@ public class ImageDisplayer {
 
     private int zoomIndex = 0;
 
-    //The array containing all boards
-    //Each thread owns a board slot in the array and can put itself into it when it has completed a generation
     private final BitmapImage img;
 
     private JFrame frame;
-    private JPanel pixelGrid;
+    private JPanel pixelGrid; //The image display area
+    private JLabel fNameLabel;  //The image file path label
 
     private final String path;
 
     public ImageDisplayer(BitmapImage img, String path) {
         this.img = img;
-
         this.path = path;
     }
 
@@ -54,6 +50,7 @@ public class ImageDisplayer {
     }
 
     public void initDisplay() throws InterruptedException {
+        //Create the frame which will contain the program
         String TITLE = "Bitmap Image Viewer!";
         frame = new JFrame(TITLE);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -66,33 +63,46 @@ public class ImageDisplayer {
 
         frame.setSize(windowBounds.width, (windowBounds.height));
 
+        //Create a panel to reside within the frame which will hold all UI elements
         JPanel verticalPanel = new JPanel();
         verticalPanel.setLayout(new BoxLayout(verticalPanel, BoxLayout.Y_AXIS));
         verticalPanel.setPreferredSize(new Dimension(windowBounds.width, (windowBounds.height)));
         verticalPanel.setBorder(new LineBorder(Color.BLACK, 2));
 
-
-        JLabel uiLabel = new JLabel(this.path);
-        uiLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        //Create UI elements to populate verticalPanel
+        this.fNameLabel = initFNameLabel(""); //empty
 
 
         //this.pixelGrid  = new JPanel(new GridBagLayout());
-        this.pixelGrid  = new JPanel(new GridLayout(yPixels, xPixels));
-
-        pixelGrid.setPreferredSize(new Dimension(xPixels, yPixels));
-        //pixelGrid.setBorder(new LineBorder(Color.BLACK, 2));
-
-        pixelGrid.setAlignmentX(Component.CENTER_ALIGNMENT);
+        this.pixelGrid  = initPixelGrid(xPixels, yPixels);
 
         //This wrapper keeps the grid centered instead of stretching when the window is too large
         JPanel centeredWrapper = new JPanel(new GridBagLayout()); // centers contents
         centeredWrapper.add(pixelGrid);
 
-        verticalPanel.add(uiLabel);
+        verticalPanel.add(fNameLabel);
         verticalPanel.add(new JScrollPane(centeredWrapper));
 
 
         frame.add(verticalPanel);
+    }
+
+    //Make label to contain current file name centered
+    private JLabel initFNameLabel(String fname) {
+        JLabel fnameLabel = new JLabel(fname);
+        fnameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        return fnameLabel;
+    }
+
+    //Make panel to contain the pixel grid
+    private JPanel initPixelGrid(int xPixels, int yPixels) {
+        JPanel pixelGrid  = new JPanel(new GridLayout(yPixels, xPixels));
+
+        pixelGrid.setPreferredSize(new Dimension(xPixels, yPixels));
+        //pixelGrid.setBorder(new LineBorder(Color.BLACK, 2));
+
+        pixelGrid.setAlignmentX(Component.CENTER_ALIGNMENT);
+        return pixelGrid;
     }
 
     public void keyBinding() {
