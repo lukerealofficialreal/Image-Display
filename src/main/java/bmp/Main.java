@@ -10,6 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+//TODO: Test Images created from template.xcf display with the right side of the image on the left, for some reason
+//      1 bit, 4 bit, 16 bit images appear blank
 public class Main {
 
     public static String imageFName;

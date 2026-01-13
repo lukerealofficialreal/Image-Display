@@ -18,24 +18,31 @@ public class ImageData {
 
     //Returns either an array containing values for Blue Green and Red,
     //Or an array with a single value which represents an index into the color table
-    public int[] getValue(int pixelNum, int row, int bitsPerPixel) {
+    public int[] getValue(int pixelNum, int row, int bitsPerPixel, boolean hasAlpha){
         //non palettized
         if(bitsPerPixel>8) {
-            int startingByte = pixelNum*(bitsPerPixel/BYTE_BITS);
-            //int numBytes = bitsPerPixel/BYTE_BITS;
-            int bitsPerColor = bitsPerPixel/3;
-            //int startingBit = bitsPerPixel%3;
-            int startingBit = 0;
-            return new int[] {DataInterpretation.bitsFromBytesToInt(this.rawData[row],startingByte,startingBit,bitsPerColor),
-                    DataInterpretation.bitsFromBytesToInt(this.rawData[row],startingByte+(bitsPerColor/8),startingBit + (bitsPerColor%8),bitsPerColor),
-                    DataInterpretation.bitsFromBytesToInt(this.rawData[row],startingByte+((bitsPerColor*2)/8),startingBit + ((bitsPerColor*2)%8),bitsPerColor)};
+            if(hasAlpha){
+                int startingByte = pixelNum * (bitsPerPixel / BYTE_BITS);
+                int bitsPerColor = bitsPerPixel / 4;
+                int startingBit = 0;
+                return new int[]{DataInterpretation.bitsFromBytesToInt(this.rawData[row], startingByte, startingBit, bitsPerColor),
+                        DataInterpretation.bitsFromBytesToInt(this.rawData[row], startingByte + (bitsPerColor / 8), startingBit + (bitsPerColor % 8), bitsPerColor),
+                        DataInterpretation.bitsFromBytesToInt(this.rawData[row], startingByte + ((bitsPerColor * 2) / 8), startingBit + ((bitsPerColor * 2) % 8), bitsPerColor),
+                        DataInterpretation.bitsFromBytesToInt(this.rawData[row], startingByte + ((bitsPerColor * 3) / 8), startingBit + ((bitsPerColor * 3) % 8), bitsPerColor)};
+            } else {
+                int startingByte = pixelNum * (bitsPerPixel / BYTE_BITS);
+                int bitsPerColor = bitsPerPixel / 3;
+                int startingBit = 0;
+                return new int[]{DataInterpretation.bitsFromBytesToInt(this.rawData[row], startingByte, startingBit, bitsPerColor),
+                        DataInterpretation.bitsFromBytesToInt(this.rawData[row], startingByte + (bitsPerColor / 8), startingBit + (bitsPerColor % 8), bitsPerColor),
+                        DataInterpretation.bitsFromBytesToInt(this.rawData[row], startingByte + ((bitsPerColor * 2) / 8), startingBit + ((bitsPerColor * 2) % 8), bitsPerColor)};
+            }
         //palettized
         } else {
             int startingByte = pixelNum/(BYTE_BITS/bitsPerPixel);
             int startingBit = pixelNum%(BYTE_BITS/bitsPerPixel)*bitsPerPixel;
 
             return new int[] {DataInterpretation.bitsFromBytesToInt(this.rawData[row],startingByte,startingBit,bitsPerPixel)};
-
         }
 
     }

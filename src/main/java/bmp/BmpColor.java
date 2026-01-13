@@ -1,4 +1,11 @@
 package bmp;
 
-public record BmpColor(int red, int green, int blue) {
+public record BmpColor(int red, int green, int blue, int alpha) {
+    public BmpColor(int red, int green, int blue) {
+        this(red, green, blue, 255);
+    }
+    public int[] RGBArray() {
+        return new int[] {red, green, blue, alpha};
+    }
 }
+

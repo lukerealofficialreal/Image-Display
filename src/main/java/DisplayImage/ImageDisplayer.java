@@ -10,6 +10,9 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
+import java.awt.image.Raster;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -34,7 +37,9 @@ public class ImageDisplayer {
 
     private JMenuBar menuBar;
     private JLabel fNameLabel;  //The image file path label
-    private JPanel pixelGrid; //The image display area
+    //private JPanel pixelGrid; //The image display area
+    private BufferedImage bufferedImage;
+    private JLabel displayedImageLabel;
 
     private String path;
 
@@ -112,12 +117,13 @@ public class ImageDisplayer {
         this.fNameLabel = initFNameLabel(""); //empty
 
         //grid to display the pixels
-        this.pixelGrid  = initPixelGrid(xPixels, yPixels);
+        this.bufferedImage = initBufferedImage(xPixels, yPixels);
+        this.displayedImageLabel = new JLabel(new ImageIcon(bufferedImage));
 
         //This wrapper keeps the grid centered instead of stretching when the window is too large
         JPanel centeredWrapper = new JPanel(new GridBagLayout()); //centers contents
         centeredWrapper.add(fNameLabel);
-        centeredWrapper.add(pixelGrid);
+        centeredWrapper.add(displayedImageLabel);
 
         verticalPanel.add(menuBar, BorderLayout.NORTH);
 
@@ -189,22 +195,31 @@ public class ImageDisplayer {
         return pixelGrid;
     }
 
-    //Clears the pixel grid and changes the size
-    private void resetPixelGrid(int xPixels, int yPixels) {
-        this.pixelGrid.removeAll();
-        ((GridLayout)this.pixelGrid.getLayout()).setColumns(xPixels);
-        ((GridLayout)this.pixelGrid.getLayout()).setRows(yPixels);
+    private BufferedImage initBufferedImage(int xPixels, int yPixels) {
+        return new BufferedImage(xPixels, yPixels, BufferedImage.TYPE_INT_ARGB);
+    }
 
-        //Reset zoom
-        //clearZoom();
-
-        //Keep current zoom
-        pixelGrid.setPreferredSize(new Dimension(
-                (int) (xPixels*((double)ZOOM_LEVELS[zoomIndex]/100)),
-                (int) (yPixels*((double)ZOOM_LEVELS[zoomIndex]/100)))
-        );
-
-        pixelGrid.setAlignmentX(Component.CENTER_ALIGNMENT);
+//    //Clears the pixel grid and changes the size
+//    private void resetPixelGrid(int xPixels, int yPixels) {
+//        this.pixelGrid.removeAll();
+//        ((GridLayout)this.pixelGrid.getLayout()).setColumns(xPixels);
+//        ((GridLayout)this.pixelGrid.getLayout()).setRows(yPixels);
+//
+//        //Reset zoom
+//        //clearZoom();
+//
+//        //Keep current zoom
+//        pixelGrid.setPreferredSize(new Dimension(
+//                (int) (xPixels*((double)ZOOM_LEVELS[zoomIndex]/100)),
+//                (int) (yPixels*((double)ZOOM_LEVELS[zoomIndex]/100)))
+//        );
+//
+//        pixelGrid.setAlignmentX(Component.CENTER_ALIGNMENT);
+//    }
+    private void resetDisplayedImage(int newXPixels, int newYPixels) {
+        this.bufferedImage = new BufferedImage(newXPixels, newYPixels, BufferedImage.TYPE_INT_ARGB);
+        this.displayedImageLabel.removeAll();
+        this.displayedImageLabel.setIcon(new ImageIcon(this.bufferedImage));
     }
 
     public ActionMap fillActionMap() {
@@ -266,10 +281,22 @@ public class ImageDisplayer {
 
     //Populate the pixelGrid with every pixel from the bitmap
     public void populate() {
-        int pixelSize = Math.min(frame.getSize().width/this.img.getWidth(), frame.getSize().height/this.img.getHeight());
-
+//        int pixelSize = Math.min(frame.getSize().width/this.img.getWidth(), frame.getSize().height/this.img.getHeight());
+//
+//        for(BmpColor bmpColor : img) {
+//            pixelGrid.add(new PixelComponent(pixelSize,bmpColor));
+//        }
+        //Get the raster, populate it one pixel at a time
+        WritableRaster raster = this.bufferedImage.getRaster();
+        int x = 0;
+        int y = 0;
         for(BmpColor bmpColor : img) {
-            pixelGrid.add(new PixelComponent(pixelSize,bmpColor));
+            raster.setPixel(x, y, bmpColor.RGBArray());
+            x++;
+            if(x >= img.getWidth()) {
+                x = 0;
+                y++;
+            }
         }
     }
 
@@ -301,7 +328,8 @@ public class ImageDisplayer {
             try {
                 ImageDisplayer.this.path = selectedFile.getPath();
                 ImageDisplayer.this.img = loadImageData(path);
-                resetPixelGrid(ImageDisplayer.this.img.getWidth(), ImageDisplayer.this.img.getHeight());
+                //resetPixelGrid(ImageDisplayer.this.img.getWidth(), ImageDisplayer.this.img.getHeight());
+                resetDisplayedImage(ImageDisplayer.this.img.getWidth(), ImageDisplayer.this.img.getHeight());
                 displayImage();
                 frame.pack();
                 frame.repaint();
@@ -321,12 +349,9 @@ public class ImageDisplayer {
             return;
         }
         zoomIndex++;
-        pixelGrid.setPreferredSize(new Dimension(
-                (int) (img.getWidth()*((double)ZOOM_LEVELS[zoomIndex]/100)),
-                (int) (img.getHeight()*((double)ZOOM_LEVELS[zoomIndex]/100)))
-        );
-        pixelGrid.revalidate();
-        pixelGrid.repaint();
+        applyZoom();
+        displayedImageLabel.revalidate();
+        displayedImageLabel.repaint();
     }
 
     public void zoomOut() {
@@ -334,12 +359,21 @@ public class ImageDisplayer {
             return;
         }
         zoomIndex--;
-        pixelGrid.setPreferredSize(new Dimension(
-                (int) (img.getWidth()*((double)ZOOM_LEVELS[zoomIndex]/100)),
-                (int) (img.getHeight()*((double)ZOOM_LEVELS[zoomIndex]/100)))
-        );
-        pixelGrid.repaint();
-        pixelGrid.revalidate();
+        applyZoom();
+        displayedImageLabel.revalidate();
+        displayedImageLabel.repaint();
+    }
+
+    public synchronized void applyZoom() {
+//        displayedImageLabel.setPreferredSize(new Dimension(
+//                (int) (img.getWidth()*((double)ZOOM_LEVELS[zoomIndex]/100)),
+//                (int) (img.getHeight()*((double)ZOOM_LEVELS[zoomIndex]/100)))
+//        );
+        displayedImageLabel.setIcon(
+                new ImageIcon((new ImageIcon(bufferedImage)).getImage().getScaledInstance(
+                        (int) (img.getWidth()*((double)ZOOM_LEVELS[zoomIndex]/100)),
+                        (int) (img.getHeight()*((double)ZOOM_LEVELS[zoomIndex]/100)),
+                        Image.SCALE_FAST)));
     }
 
     public void clearZoom() {

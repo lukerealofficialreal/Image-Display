@@ -83,23 +83,29 @@ public class BitmapImage implements Iterable<BmpColor> {
                 case BI_BITFIELDS -> throw new RuntimeException("BI_BITFIELDS not supported");
                 case BI_ALPHABITFIELDS -> throw new RuntimeException("BI_ALPHABITFIELDS not supported");
             };
-            case RGB_16_BIT -> getDirectColor(col, row, 16);
-            case RGB_24_BIT -> getDirectColor(col, row, 24);
+            case RGB_16_BIT -> getDirectColor(col, row, 16, false);
+            case RGB_24_BIT -> getDirectColor(col, row, 24, false);
+            case ARGB_32_BIT -> getDirectColor(col, row, 32, true); //TODO: support alpha channel
+            case XRGB_32_BIT -> getDirectColor(col, row, 32, true);
         };
     }
 
     public BmpColor getMonochromeColor(int col, int row) {
-        return (this.img.getValue(col, row, 1)[0] == 1) ? (new BmpColor(255, 255, 255)) : (new BmpColor(0,0,0));
+        return (this.img.getValue(col, row, 1, false)[0] == 1) ? (new BmpColor(255, 255, 255)) : (new BmpColor(0,0,0));
     }
 
     //Depth must be less than 8
     public BmpColor getPalettizedColor(int col, int row, int depth) {
-        return this.colorTable.getColor(this.img.getValue(col, row, depth)[0]);
+        return this.colorTable.getColor(this.img.getValue(col, row, depth, false)[0]);
     }
 
-    public BmpColor getDirectColor(int col, int row, int depth) {
-        int[] colorsBGR = this.img.getValue(col, row, depth);
-        return new BmpColor(colorsBGR[2], colorsBGR[1], colorsBGR[0]);
+    public BmpColor getDirectColor(int col, int row, int depth, boolean hasAlpha) {
+        int[] colorsBGR = this.img.getValue(col, row, depth, hasAlpha);
+        if(hasAlpha) {
+            return new BmpColor(colorsBGR[2], colorsBGR[1], colorsBGR[0], colorsBGR[3]);
+        } else {
+            return new BmpColor(colorsBGR[2], colorsBGR[1], colorsBGR[0]);
+        }
     }
 
     @Override

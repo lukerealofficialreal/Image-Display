@@ -25,7 +25,9 @@ public class InfoHeader extends DataInterpretation {
         PALLETIZED_4_BIT((short)4,16),
         PALLETIZED_8_BIT((short)8,256),
         RGB_16_BIT((short)16,65536),
-        RGB_24_BIT((short)24,16777216);
+        RGB_24_BIT((short)24,16777216),
+        ARGB_32_BIT((short)32,16777216),
+        XRGB_32_BIT((short)32,16777216);
 
         private final short bits;
         private final int numColors;
