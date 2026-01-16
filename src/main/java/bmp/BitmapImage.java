@@ -40,16 +40,31 @@ public class BitmapImage implements Iterable<BmpColor> {
             rawDataPos+= colorTableNumBytes;
         }
 
-        //As soon as it becomes possible to generate lots of test images, test this padding code thoroughly
-        int padding = (getWidth()*(infoHeader.bitsPerPixel.getBits()/8))%4;
+        System.out.println("pos after color table: " + rawDataPos);
+        rawDataPos = header.dataOffset;
+        System.out.println("start of img data: " + rawDataPos);
+
+        //There is padding at the end of each horizontal line of pixels such that each row aligns with a 4 byte boundary
+        int padding = ((int)Math.ceil(getWidth()*((double) infoHeader.bitsPerPixel.getBits() / BYTE_BITS)))%4;
         padding = (padding==0) ? (0) : (4-padding);
 
-        int imageDataNumBytesNoPadding = (int) ((getWidth()) * getHeight() * ((double) infoHeader.bitsPerPixel.getBits() / BYTE_BITS));
-        int imageDataNumBytes = (int) ((getWidth()) * getHeight() * ((double) infoHeader.bitsPerPixel.getBits() / BYTE_BITS)) + (padding*getHeight());
+
+        int rowLenNumBytesNoPadding = (int) Math.ceil(getWidth() * ((double) infoHeader.bitsPerPixel.getBits() / BYTE_BITS));
+        int rowLenNumBytes = rowLenNumBytesNoPadding + padding;
+        //Special case: If the number of bytes in each scanline is less than one, padding must be one
+//        if((int) ((getWidth())  * ((double) infoHeader.bitsPerPixel.getBits() / BYTE_BITS)) == 0) {
+//            padding = 1;
+//        }
+
+        int imageDataNumBytes = rowLenNumBytes*getHeight();//imageDataNumBytesNoPadding + (padding*getHeight());
         byte[] imageData = new byte[imageDataNumBytes];
         System.arraycopy(rawData, rawDataPos, imageData,0, imageDataNumBytes);
 
-        this.img = new ImageData(imageData, infoHeader.getHeight(), (int) (getWidth()*((double)infoHeader.bitsPerPixel.getBits()/BYTE_BITS)), padding);
+        //TODO: imageDataNumBytes and the number of bytes in the image are not always the same!
+        //      If the number of bytes in each line is rounded up, there is extra wasted space on each line
+        //      In the 2D array as each row must align on a byte boundary
+
+        this.img = new ImageData(imageData, infoHeader.getHeight(), (int) Math.ceil(getWidth()*((double)infoHeader.bitsPerPixel.getBits()/BYTE_BITS)), padding);
 
         //rawDataPos+=imageDataNumBytes;
     }
@@ -91,7 +106,10 @@ public class BitmapImage implements Iterable<BmpColor> {
     }
 
     public BmpColor getMonochromeColor(int col, int row) {
-        return (this.img.getValue(col, row, 1, false)[0] == 1) ? (new BmpColor(255, 255, 255)) : (new BmpColor(0,0,0));
+        //int val = this.img.getValue(col, row, 1, false)[0];
+        //System.out.println(val);
+        int p = this.img.getValue(col, row, 1, false)[0];
+        return (p == 1) ? (new BmpColor(255, 255, 255)) : (new BmpColor(0,0,0));
     }
 
     //Depth must be less than 8
@@ -123,6 +141,7 @@ public class BitmapImage implements Iterable<BmpColor> {
             public BmpColor next() {
                 BmpColor color = get(col, row);
                 col++;
+                System.out.println(color);
                 if(col == getWidth()) {
                     col = 0;
                     row--;

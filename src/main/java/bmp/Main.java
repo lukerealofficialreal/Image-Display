@@ -4,14 +4,11 @@ import DisplayImage.ImageDisplayer;
 import Utilities.ArgumentMap;
 import exceptions.InvalidArgumentException;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
-//TODO: Test Images created from template.xcf display with the right side of the image on the left, for some reason
-//      1 bit, 4 bit, 16 bit images appear blank
+//TODO: 1 bit, 4 bit, 16 bit images do not use the correct colors
 //      Does not support alpha channel
 public class Main {
 

@@ -21,11 +21,12 @@ public class ImageDisplayer {
     //The factor to scale down the window from the size of the screen
     private static final double WINDOW_SIZE_FACTOR = 0.7;
 
-    private static final int[] ZOOM_LEVELS = {100, 200, 300, 400, 600, 800, 1000, 1200, 1600, 2000, 2800, 4000};
+    private static final int STARTING_ZOOM_IDX = 4;
+    private static final int[] ZOOM_LEVELS = {10, 25, 40, 60, 100, 200, 300, 400, 600, 800, 1000, 1200, 1600, 2000, 2800, 4000};
 
     private static final int MENU_BAR_HEIGHT = 40;
 
-    private int zoomIndex = 0;
+    private int zoomIndex = STARTING_ZOOM_IDX;
 
     private BitmapImage img;
     private boolean imageLoaded;
@@ -85,6 +86,7 @@ public class ImageDisplayer {
     //Updates the UI to display the image currently loaded in 'img'
     private void displayImage() {
         populate(); //Add pixels to the display
+        applyZoom();
         fNameLabel.setText(this.path); //set text for display
     }
 
@@ -219,7 +221,7 @@ public class ImageDisplayer {
     private void resetDisplayedImage(int newXPixels, int newYPixels) {
         this.bufferedImage = new BufferedImage(newXPixels, newYPixels, BufferedImage.TYPE_INT_ARGB);
         this.displayedImageLabel.removeAll();
-        this.displayedImageLabel.setIcon(new ImageIcon(this.bufferedImage));
+        //this.displayedImageLabel.setIcon(new ImageIcon(this.bufferedImage));
     }
 
     public ActionMap fillActionMap() {
@@ -365,10 +367,6 @@ public class ImageDisplayer {
     }
 
     public synchronized void applyZoom() {
-//        displayedImageLabel.setPreferredSize(new Dimension(
-//                (int) (img.getWidth()*((double)ZOOM_LEVELS[zoomIndex]/100)),
-//                (int) (img.getHeight()*((double)ZOOM_LEVELS[zoomIndex]/100)))
-//        );
         displayedImageLabel.setIcon(
                 new ImageIcon((new ImageIcon(bufferedImage)).getImage().getScaledInstance(
                         (int) (img.getWidth()*((double)ZOOM_LEVELS[zoomIndex]/100)),
@@ -377,6 +375,6 @@ public class ImageDisplayer {
     }
 
     public void clearZoom() {
-        zoomIndex = 0;
+        zoomIndex = STARTING_ZOOM_IDX;
     }
 }

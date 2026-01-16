@@ -178,7 +178,7 @@ public class InfoHeader extends DataInterpretation {
     }
 
     public int getNumColors() {
-        return colorsUsed;//bitsPerPixel.getNumColors();
+        return bitsPerPixel.getNumColors();
     }
 
 }

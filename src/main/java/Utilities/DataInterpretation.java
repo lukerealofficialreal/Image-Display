@@ -83,7 +83,7 @@ public class DataInterpretation {
     public static int bitsFromBytesToInt(byte[] raw, int startingByte, int startingBit, int numBits) {
         //Convert all the bytes which contain the desired bits from the image into an integer.
         //Crop the integer to only the desired bytes of bytes with shifts and a mask
-        int dataAsInteger = getIntFromData(raw, startingByte, numBits/BYTE_BITS);
+        int dataAsInteger = getIntFromData(raw, startingByte, Math.ceilDiv(numBits, BYTE_BITS));
         dataAsInteger <<= startingBit;
         return dataAsInteger>>>(INT_BITS-numBits);
 
